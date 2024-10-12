@@ -1,12 +1,15 @@
 // src/components/Login.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, TextField, Button, Typography, Box } from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
+import { Container, TextField, Button, Typography, Box, InputAdornment, IconButton, Checkbox, FormControlLabel } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { login } from '../services/auth';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -14,12 +17,16 @@ function Login() {
     e.preventDefault();
     setError('');
     try {
-      await login(email, password);
-      navigate('/dashboard'); // Redirect to dashboard after successful login
+      await login(email, password, rememberMe);
+      navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError(err.response?.data?.message || 'Network error. Please try again.');
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -47,11 +54,24 @@ function Login() {
             fullWidth
             name="password"
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={togglePasswordVisibility} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <FormControlLabel
+            control={<Checkbox value="remember" color="primary" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />}
+            label="Remember me"
           />
           <Button
             type="submit"
@@ -61,8 +81,16 @@ function Login() {
           >
             Sign In
           </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <Link to="/forgot-password" style={{ textDecoration: 'none' }}>
+              Forgot password?
+            </Link>
+            <Link to="/signup" style={{ textDecoration: 'none' }}>
+              Don't have an account? Sign Up
+            </Link>
+          </Box>
           {error && (
-            <Typography color="error" align="center">
+            <Typography color="error" align="center" sx={{ mt: 2 }}>
               {error}
             </Typography>
           )}
